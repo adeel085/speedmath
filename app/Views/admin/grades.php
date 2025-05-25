@@ -94,12 +94,36 @@
                                 <tr style="background-color: #f5f5f5;">
                                     <td colspan="2">
                                         <ul class="list-unstyled" style="padding-left: 20px;margin-bottom: 0;border-left: 3px solid #acacac;">
+                                            <li class="row mb-2">
+                                                <div class="col-2">
+                                                    <span>Grade</span>
+                                                </div>
+                                                <div class="col-3">
+                                                    <span>Number of Questions</span>
+                                                </div>
+                                                <div class="col-4">
+                                                    <span>Topic</span>
+                                                </div>
+                                            </li>
                                             <?php foreach ($grade['grade_levels'] as $gradeLevel) : ?>
-                                                <li class="text-muted mb-2 d-flex justify-content-between align-items-center">
-                                                    <span><?= $gradeLevel['grade_level'] ?></span>
-                                                    <a href="<?= base_url('admin/grades/setRoute/' . $gradeLevel['id']) ?>" data-toggle="tooltip" data-placement="left" title="Set Route" class="btn btn-sm btn-dark rounded-circle">
-                                                        <i class="fa fa-route"></i>
-                                                    </a>
+                                                <li data-id="<?= $gradeLevel['id'] ?>" class="text-muted mb-3 row align-items-center">
+                                                    <div class="col-2">
+                                                        <span><?= $gradeLevel['grade_level'] ?></span>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <input type="text" style="width: 160px; max-width: 100%;" class="form-control number-of-questions" value="<?= $gradeLevel['number_of_questions'] ?>">
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <select class="form-control grade-topic-select">
+                                                            <option value="" disabled <?= $gradeLevel['topic_id'] == '' ? 'selected' : '' ?>>Select Topic</option>
+                                                            <?php foreach ($topics as $topic) : ?>
+                                                                <option value="<?= $topic['id'] ?>" <?= $gradeLevel['topic_id'] == $topic['id'] ? 'selected' : '' ?>><?= $topic['name'] ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <button class="btn btn-sm btn-primary save-grade-btn">Save Changes</button>
+                                                    </div>
                                                 </li>
                                             <?php endforeach; ?>
                                         </ul>
@@ -124,6 +148,58 @@
 <?= $this->section('foot') ?>
 <script>
     $(document).ready(function() {
+
+        $('.save-grade-btn').click(async function() {
+
+            console.log("Saved");
+
+            let topicId = $(this).closest("li").find(".grade-topic-select").val();
+            let numberOfQuestions = $(this).closest("li").find(".number-of-questions").val();
+            let gradeLevelId = $(this).closest('li').data('id');
+            
+            try {
+
+                let formData = new FormData();
+                formData.append('grade_level_id', gradeLevelId);
+                formData.append('number_of_questions', numberOfQuestions);
+                formData.append('topic_id', topicId);
+
+                let res = await ajaxCall({
+                    url: baseUrl + 'admin/grades/save-settings',
+                    data: formData,
+                    csrfHeader: '<?= csrf_header() ?>',
+                    csrfHash: '<?= csrf_hash() ?>'
+                });
+
+                if (res.status == 'success') {
+                    new Notify({
+                        title: 'Success',
+                        text: res.message,
+                        status: 'success',
+                        autoclose: true,
+                        autotimeout: 3000
+                    });
+                }
+                else {
+                    new Notify({
+                        title: 'Error',
+                        text: res.message,
+                        status: 'error',
+                        autoclose: true,
+                        autotimeout: 3000
+                    });
+                }
+            }
+            catch (err) {
+                new Notify({
+                    title: 'Error',
+                    text: err.responseJSON.message || 'Something went wrong',
+                    status: 'error',
+                    autoclose: true,
+                    autotimeout: 3000
+                });
+            }
+        });
 
         $('.edit-grade-btn').click(function() {
             

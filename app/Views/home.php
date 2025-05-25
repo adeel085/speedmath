@@ -25,41 +25,71 @@
 
 <?= $this->section('content') ?>
 
-<div class="container-fluid mt-5">
-    <div class="row">
-        <div class="col-12">
-            <div class="question-center">
-                
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><?= $currentTopic['name'] ?></span>
-                            <span>Level <?= $currentLevel ?></span>
+<?php
+if (!$currentTopic) {
+    ?>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i> <?= !empty($message) ? $message : "No topic for you. Talk to your teacher about this." ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+else if (count($questions) == 0) {
+    ?>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i> <?= !empty($message) ? $message : "No questions found in your current topic " . $currentTopic['name'] . ". Talk to your teacher to add questions in this topic." ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+else {
+    ?>
+    <div class="container-fluid mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="question-center">
+                    
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center" style="gap: 10px;">
+                                <span><?= $currentTopic['name'] ?></span>
+                                <span class="elapsed-time-wrapper">Elapsed Time: <span id="elapsedTime"></span></span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <div class="card-body">
+                    <div class="card">
+                        <div class="card-body">
 
-                        <div id="questionsWrapper">
+                            <div id="questionsWrapper">
 
-                        </div>
-
-                        <div class="question-footer d-flex justify-content-end mt-3">
-                            <button class="btn btn-primary next-question" id="submitBtn">Submit</button>
-                        </div>
-
-                        <div class="question-solution mt-3" style="display: none;">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Solution</h5>
-                                    <div class="solution-content"></div>
-                                </div>
                             </div>
 
-                            <div class="d-flex justify-content-end mt-3">
-                                <button class="btn btn-primary next-question" id="nextQuestionBtn">Next</button>
+                            <div class="question-footer d-flex justify-content-end mt-3">
+                                <button class="btn btn-primary" id="submitBtn">Submit</button>
+                            </div>
+
+                            <div class="question-solution mt-3" style="display: none;">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Solution</h5>
+                                        <div class="solution-content"></div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button class="btn btn-primary next-question" id="nextQuestionBtn">Next</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -67,7 +97,9 @@
             </div>
         </div>
     </div>
-</div>
+    <?php
+}
+?>
 
 <?= $this->endSection() ?>
 
@@ -76,18 +108,9 @@
 <script>
     $(document).ready(async function() {
 
-        let remainingSeconds = <?= $remainingSeconds ?>;
-
-        let endTime = Date.now() + (remainingSeconds * 1000); // Calculate end timestamp
-
-        let checkInterval = setInterval(() => {
-            let currentTime = Date.now(); // Get current time
-
-            if (currentTime >= endTime) {
-                clearInterval(checkInterval); // Stop checking
-                window.location.href = window.baseUrl + 'evaluation'; // Redirect
-            }
-        }, 1000);
+        let timeInterval = null;
+        let currentQuestionIndex = -1;
+        let questions = <?= json_encode($questions) ?>;
 
         await showNextQuestion();
 
@@ -227,112 +250,140 @@
         });
 
         $('#nextQuestionBtn').click(async function() {
+            $('#submitBtn').removeAttr('data-disabled').css({
+                'pointer-events': 'auto',
+                'opacity': 1
+            });
+            $(".question-solution").hide();
             await showNextQuestion();
         });
-    });
 
-    async function showNextQuestion() {
+        async function showNextQuestion() {
 
-        $('.question-solution').hide();
-        $('.question-solution .solution-content').html('');
-        $('#submitBtn').removeAttr('data-disabled');
-        $('#submitBtn').css({
-            'pointer-events': 'none',
-            'opacity': 0.5
-        });
+            currentQuestionIndex++;
 
-        $('.question-item').hide();
+            if (currentQuestionIndex >= questions.length) {
 
-        let res = await getQuestion();
+                clearInterval(timeInterval);
+                timeInterval = null;
 
-        if (res.status == 'success') {
-
-            if (res.question === null) {
+                $('.elapsed-time-wrapper').hide();
                 
-                $("#questionsWrapper").html(`<span>No more questions found in your current topic and current level</span>`);
+                let formData = new FormData();
 
-                $(".question-center .question-footer").remove();
-                $(".question-center .question-solution").remove();
+                try {
+                    const res = await ajaxCall({
+                        url: baseUrl + 'evaluate-session',
+                        data: formData,
+                        csrfHeader: '<?= csrf_header() ?>',
+                        csrfHash: '<?= csrf_hash() ?>'
+                    });
+
+                    if (res.status == 'success') {
+
+                        renderResult(res);
+                    }
+                    else {
+                        new Notify({
+                            title: 'Error',
+                            text: res.message || 'Something went wrong',
+                            status: 'error',
+                            autoclose: true,
+                            autotimeout: 3000
+                        });
+                    }
+                }
+                catch (err) {
+                    new Notify({
+                        title: 'Error',
+                        text: err.responseJSON.message || 'Something went wrong',
+                        status: 'error',
+                        autoclose: true,
+                        autotimeout: 3000
+                    });
+                }
 
                 return;
             }
 
-            renderQuestion(res.question);
-        }
-        else {
-            if (res.message == 'session_completed') {
-                window.location.reload();
-            }
-            else {
-                reject(res.message);
-            }
+            renderQuestion(questions[currentQuestionIndex]);
         }
 
-        $('#submitBtn').css({
-            'pointer-events': 'auto',
-            'opacity': 1
-        });
-    }
+        function renderResult(result) {
+            $("#questionsWrapper").empty();
+            $(".question-footer, .question-solution").remove();
 
-    function renderQuestion(question) {
-        $('#questionsWrapper').html(`
-            <div class="question-item" data-id="questionid" style="display: block;">
-                <h5 class="card-title">${question.question_html}</h5>
-
-                <div class="answer-area">
-                    ${(question.question_type == "text") ? `
-                        <div class="answer-item">
-                            <input type="text" class="form-control text-answer" autofocus>
-                        </div>
-                    ` : `
-                        ${question.answers.map((answer, index) => `
-                            <div class="answer-item mcq-option-wrapper">
-                                <label class="d-flex align-items-center" style="gap: 10px;">
-                                    <input type="radio" name="answer" class="answer-radio" value='${base64EncodeUnicode(answer.answer)}'>
-                                    ${answer.answer}
-                                </label>
-                            </div>
-                        `).join('')}
-                    `}
+            $('#questionsWrapper').html(`
+                <div class="result-wrapper">
+                    <h5 class="card-title">Result</h5>
+                    <p><strong>Correct Answers:</strong> ${result.correct_count}</p>
+                    <p><strong>Incorrect Answers:</strong> ${result.incorrect_count}</p>
+                    <p><strong>Elapsed Time:</strong> ${result.elapsed_time}</p>
+                    <a href="${window.baseUrl}home" class="btn btn-primary">Restart Session</a>
                 </div>
+            `);
+        }
 
-                <input type="hidden" id="questionType" value="${question.question_type}">
-                <input type="hidden" id="questionId" value="${question.id}">
-            </div>
-        `);
+        function renderQuestion(question) {
+            $('#questionsWrapper').html(`
+                <div class="question-item" data-id="questionid" style="display: block;">
+                    <h5 class="card-title">${question.question_html}</h5>
 
-        // Force MathJax to re-render the newly loaded content
-        MathJax.Hub.Queue([
-            "Typeset",
-            MathJax.Hub,
-            $("#questionsWrapper").get(0),
-        ]);
-    }
+                    <div class="answer-area">
+                        ${(question.question_type == "text") ? `
+                            <div class="answer-item">
+                                <input type="text" class="form-control text-answer" autofocus>
+                            </div>
+                        ` : `
+                            ${question.answers.map((answer, index) => `
+                                <div class="answer-item mcq-option-wrapper">
+                                    <label class="d-flex align-items-center" style="gap: 10px;">
+                                        <input type="radio" name="answer" class="answer-radio" value='${base64EncodeUnicode(answer.answer)}'>
+                                        ${answer.answer}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        `}
+                    </div>
 
-    async function getQuestion() {
-        return new Promise((resolve, reject) => {
-            $.ajax({
-                url: '<?= base_url('/get-question') ?>',
-                method: 'POST',
-                success: function(response) {
-                    resolve(response);
-                },
-                error: function(xhr, status, error) {
-                    reject(error);
-                }
-            });
-        });
-    }
+                    <input type="hidden" id="questionType" value="${question.question_type}">
+                    <input type="hidden" id="questionId" value="${question.id}">
+                </div>
+            `);
 
-    function base64EncodeUnicode(str) {
-        return btoa(
-            new TextEncoder().encode(str).reduce((data, byte) => data + String.fromCharCode(byte), '')
-        );
-    }
+            // Force MathJax to re-render the newly loaded content
+            MathJax.Hub.Queue([
+                "Typeset",
+                MathJax.Hub,
+                $("#questionsWrapper").get(0),
+            ]);
+        }
 
-    function base64DecodeUnicode(str) {
-        return new TextDecoder().decode(Uint8Array.from(atob(str), c => c.charCodeAt(0)));
-    }
+        function base64EncodeUnicode(str) {
+            return btoa(
+                new TextEncoder().encode(str).reduce((data, byte) => data + String.fromCharCode(byte), '')
+            );
+        }
+
+        function base64DecodeUnicode(str) {
+            return new TextDecoder().decode(Uint8Array.from(atob(str), c => c.charCodeAt(0)));
+        }
+
+        // Code to calculate and display elapsed time
+        let startTime = new Date();
+        let elapsedTime = new Date().getTime() - startTime.getTime();
+        let minutes = Math.floor(elapsedTime / 60000);
+        let seconds = Math.floor((elapsedTime % 60000) / 1000);
+        $("#elapsedTime").html(`${minutes}m ${seconds}s`);
+
+        // Update elapsed time every second
+        timeInterval = setInterval(() => {
+            let elapsedTime = new Date().getTime() - startTime.getTime();
+            let minutes = Math.floor(elapsedTime / 60000);
+            let seconds = Math.floor((elapsedTime % 60000) / 1000);
+            $("#elapsedTime").html(`${minutes}m ${seconds}s`);
+        }, 1000);
+    });
 
     if ('BroadcastChannel' in window) {
         const channel = new BroadcastChannel('tab-communication');

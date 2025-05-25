@@ -62,7 +62,6 @@
                     <table class="table mb-0">
                         <thead>
                             <tr>
-                                <th>Level</th>
                                 <th>Question Type</th>
                                 <th>Question</th>
                                 <th></th>
@@ -71,7 +70,6 @@
                         <tbody>
                             <?php foreach ($questions as $question) : ?>
                                 <tr data-id="<?= $question['id'] ?>" data-topics='<?= json_encode($question['topics']) ?>'>
-                                    <td><?= $question['level'] ?></td>
                                     <td><?= $question['question_type'] ?></td>
                                     <td><?= strip_tags($question['question_html']) ?></td>
                                     <td>

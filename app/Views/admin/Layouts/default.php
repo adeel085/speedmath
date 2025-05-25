@@ -121,24 +121,6 @@
                                 </a>
                             </div>
                         </li>
-
-                        <li>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <a href="<?= base_url('/admin/timer') ?>">
-                                    <i class="fa fa-hourglass-half navbar-icon"></i>
-                                    <span>Timer</span>
-                                </a>
-                            </div>
-                        </li>
-
-                        <li>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <a href="<?= base_url('/admin/goals') ?>">
-                                    <i class="fa fa-bullseye navbar-icon"></i>
-                                    <span>Goals</span>
-                                </a>
-                            </div>
-                        </li>
                         <?php
                     }
                     ?>

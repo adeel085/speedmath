@@ -43,17 +43,6 @@
 
                     <div class="col-sm-6">
                         <div class="form-group">
-                            <label for="difficulty">Difficulty Level</label>
-                            <select class="form-control" id="difficulty">
-                                <option value="1">Level 1 - Easy</option>
-                                <option value="2">Level 2 - Medium</option>
-                                <option value="3">Level 3 - Hard</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="col-sm-6">
-                        <div class="form-group">
                             <label for="questionType">Question Type</label>
                             <select class="form-control" id="questionType">
                                 <option value="text">Text Entry</option>
@@ -187,7 +176,6 @@
         $("#saveBtn").click(async function(e) {
             
             let topicId = $("#topic").val();
-            let difficulty = $("#difficulty").val();
             let questionType = $("#questionType").val();
             let question = CKEDITOR.instances["questionEditor"].getData();
             let solution = CKEDITOR.instances["solutionEditor"].getData();
@@ -225,7 +213,6 @@
             try {
                 let formData = new FormData();
                 formData.append('topicId', topicId);
-                formData.append('difficulty', difficulty);
                 formData.append('questionType', questionType);
                 formData.append('question', question);
                 formData.append('solution', solution);

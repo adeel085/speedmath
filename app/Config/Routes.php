@@ -35,26 +35,24 @@ $routes->get('/admin/questions', 'AdminQuestions::index');
 $routes->get('/admin/questions/new', 'AdminQuestions::newPage');
 $routes->get('/admin/questions/edit/(:any)', 'AdminQuestions::editPage/$1');
 
-$routes->get('/admin/timer', 'AdminTimer::index');
-$routes->get('/admin/goals', 'AdminGoals::index');
-
 $routes->get('/evaluation', 'Home::evaluationPage');
 
 $routes->get('/report-questions', 'Reports::reportMissingQuestions');
 
 $routes->get('/page-selection', 'Home::pageSelection');
 
-$routes->get('/progress', 'Home::progressPage');
 $routes->get('/history', 'Home::historyPage');
+
+$routes->post('/evaluate-session', 'Home::evaluateSession');
 
 $routes->post('/admin/login', 'AdminLogin::login');
 $routes->post('/admin/grades/saveNew', 'AdminGrades::saveNew');
 $routes->post('/admin/grades/update', 'AdminGrades::update');
 $routes->post('/admin/grades/delete', 'AdminGrades::delete');
+$routes->post('/admin/grades/save-settings', 'AdminGrades::saveSettings');
 $routes->post('/admin/students/saveNew', 'AdminStudents::saveNew');
 $routes->post('/admin/students/update', 'AdminStudents::update');
 $routes->post('/admin/students/delete', 'AdminStudents::delete');
-$routes->post('/admin/students/resetPoints', 'AdminStudents::resetPoints');
 $routes->post('/admin/students/send-missed-questions-email', 'AdminStudents::sendMissedQuestionsEmail');
 $routes->post('/admin/topics/saveNew', 'AdminTopics::saveNew');
 $routes->post('/admin/topics/update', 'AdminTopics::update');
@@ -71,14 +69,8 @@ $routes->post('/admin/classes/saveNew', 'AdminClasses::saveNew');
 $routes->post('/admin/classes/delete', 'AdminClasses::delete');
 $routes->post('/admin/classes/update', 'AdminClasses::update');
 $routes->post('/admin/dashboard/viewReport', 'AdminDashboard::viewReport');
-$routes->post('/get-question', 'Home::getQuestion');
 $routes->post('/class/send-email', 'AdminClasses::sendEmailToParents');
-$routes->post('/admin/timer/save', 'AdminTimer::save');
 $routes->post('/admin/topics/create-from-wizard', 'AdminTopics::createTopicFromWizard');
-$routes->post('/admin/goals/fetchWeeklyGoals', 'AdminGoals::fetchWeeklyGoals');
-$routes->post('/admin/goals/addWeeklyGoal', 'AdminGoals::addWeeklyGoal');
-$routes->post('/admin/goals/deleteWeeklyGoal', 'AdminGoals::deleteWeeklyGoal');
-$routes->post('/home/getHistory', 'Home::getHistory');
 
 $routes->post('/admin/teachers/saveNew', 'AdminTeachers::saveNew');
 $routes->post('/admin/teachers/update', 'AdminTeachers::update');

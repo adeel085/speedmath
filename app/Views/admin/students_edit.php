@@ -52,8 +52,11 @@
                         <div class="form-group">
                             <label for="grade">Grade <span class="text-danger">*</span></label>
                             <select class="form-control" id="grade">
+                                <option value="" disabled <?= $student['grade'] ? '' : 'selected' ?>>Select Grade</option>
                                 <?php foreach ($grades as $grade) : ?>
-                                    <option value="<?= $grade['id'] ?>" <?= $student['grade']['id'] == $grade['id'] ? 'selected' : '' ?>><?= $grade['grade_level'] ?></option>
+                                    <option value="<?= $grade['id'] ?>" <?= $student['grade'] && $student['grade']['id'] == $grade['id'] ? 'selected' : '' ?>>
+                                        <?= $grade['grade_level'] ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -81,10 +84,6 @@
                     <input type="hidden" id="id" value="<?= $student['id'] ?>">
                 </div>
 
-                <div class="mt-3">
-                    <button class="btn btn-sm btn-outline-danger" id="resetPointsBtn">Reset Student Points</button>
-                </div>
-
                 <div class="d-flex justify-content-end mt-3">
                     <button class="btn btn-sm btn-primary" id="saveBtn">Update</button>
                 </div>
@@ -99,7 +98,7 @@
 <script>
     $(() => {
 
-        let studentGradeId = <?= $student['grade']['id'] ?>;
+        let studentGradeId = <?= $student['grade'] ? $student['grade']['id'] : 'null' ?>;
 
         $('#saveBtn').click(async function(e) {
             
@@ -123,7 +122,7 @@
                 return;
             }
 
-            if (studentGradeId != grade && !confirm('Are you sure you want to change the grade of this student?')) {
+            if (studentGradeId != null && studentGradeId != grade && !confirm('Are you sure you want to change the grade of this student?')) {
                 return;
             }
 
@@ -173,55 +172,6 @@
 
             // Reset save button
             $('#saveBtn').html($(this).attr('data-content')).css('pointer-events', 'auto');
-        });
-
-        $("#resetPointsBtn").click(async function(e) {
-            if (!confirm('Are you sure you want to reset the points of this student? Student will lose all the points earned so far. Do you want to proceed?')) {
-                return;
-            }
-            
-            let id = $('#id').val();
-
-            let formData = new FormData();
-            formData.append('id', id);
-
-            try {
-
-                $(this).attr('data-content', $(this).html()).html('<i class="fa fa-spinner fa-spin"></i>').css('pointer-events', 'none');
-
-                let response = await ajaxCall({
-                    url: baseUrl + '/admin/students/resetPoints',
-                    data: formData,
-                    csrfHeader: '<?= csrf_header() ?>',
-                    csrfHash: '<?= csrf_hash() ?>'
-                });
-
-                if (response.status == 'success') {
-                    window.location.reload();
-                    return;
-                }
-                else {
-                    new Notify({
-                        title: 'Error',
-                        text: response.message,
-                        status: 'error',
-                        autoclose: true,
-                        autotimeout: 3000
-                    });
-                }
-            }
-            catch (error) {
-                new Notify({
-                    title: 'Error',
-                    text: error.responseJSON.message || 'Something went wrong',
-                    status: 'error',
-                    autoclose: true,
-                    autotimeout: 3000
-                });
-            }
-
-            // Reset save button
-            $('#resetPointsBtn').html($(this).attr('data-content')).css('pointer-events', 'auto');
         });
     });
 </script>

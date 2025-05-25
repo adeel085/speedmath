@@ -4,9 +4,9 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class StudentSessionModel extends Model
+class StudentSessionResultModel extends Model
 {
-    protected $table = 'students_sessions';
+    protected $table = 'students_sessions_results';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
@@ -17,5 +17,5 @@ class StudentSessionModel extends Model
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $dateFormat = 'datetime';
-    protected $allowedFields = ['student_id', 'topic_id', 'level', 'percentage', 'correct_answers', 'stars'];
+    protected $allowedFields = ['student_id', 'correct_count', 'incorrect_count', 'time_taken', 'grade_id', 'topic_id'];
 }

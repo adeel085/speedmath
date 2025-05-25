@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Models\GradeModel;
 use App\Models\TopicModel;
-use App\Models\GradeRouteModel;
 
 class AdminGrades extends BaseController
 {
@@ -19,6 +18,7 @@ class AdminGrades extends BaseController
         }
 
         $gradeModel = new GradeModel();
+        $topicModel = new TopicModel();
 
         $grades = $gradeModel->select('name')->groupBy('name')->findAll();
 
@@ -26,9 +26,12 @@ class AdminGrades extends BaseController
             $grade['grade_levels'] = $gradeModel->where('name', $grade['name'])->findAll();
         }
 
+        $topics = $topicModel->findAll();
+
         return view('admin/grades', [
             'pageTitle' => 'Grades',
             'grades' => $grades,
+            'topics' => $topics,
             'flashData' => $this->session->getFlashdata(),
             'user' => $this->user
         ]);
@@ -105,6 +108,34 @@ class AdminGrades extends BaseController
         return $this->response->setJSON(['status' => 'success', 'message' => 'Grade updated successfully']);
     }
 
+    public function saveSettings()
+    {
+        if (!$this->user) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
+
+        if ($this->user['user_type'] != 'admin') {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Forbidden']);
+        }
+
+        $gradeLevelId = $this->request->getPost('grade_level_id');
+        $numberOfQuestions = $this->request->getPost('number_of_questions');
+        $topicId = $this->request->getPost('topic_id');
+
+        if (!$gradeLevelId || !$topicId) {
+            return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'Bad Request']);
+        }
+
+        $gradeModel = new GradeModel();
+
+        $gradeModel->where('id', $gradeLevelId)->set([
+            'topic_id' => $topicId,
+            'number_of_questions' => $numberOfQuestions
+        ])->update();
+
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Grade settings successfully']);
+    }
+
     public function delete()
     {
         if (!$this->user) {
@@ -128,77 +159,5 @@ class AdminGrades extends BaseController
         $this->session->setFlashdata('status', 'grade_deleted');
 
         return $this->response->setJSON(['status' => 'success', 'message' => 'Grade deleted successfully']);
-    }
-
-    public function setRoutePage($id)
-    {
-        if (!$this->user) {
-            return redirect()->to(base_url('/admin'));
-        }
-
-        if ($this->user['user_type'] != 'admin') {
-            return redirect()->to(base_url('/'));
-        }
-
-        $gradeModel = new GradeModel();
-        $topicModel = new TopicModel();
-        $gradeRouteModel = new GradeRouteModel();
-
-        $grade = $gradeModel->find($id);
-        $topics = $topicModel->findAll();
-
-        if (!$grade) {
-            return redirect()->to(base_url('/admin/grades'));
-        }
-
-        $gradeRoute = $gradeRouteModel->where('grade_id', $id)->findAll();
-
-        foreach ($gradeRoute as &$routeTopic) {
-            $routeTopic['topic'] = $topicModel->find($routeTopic['topic_id']);
-        }
-
-        return view('admin/grades_set_route', [
-            'pageTitle' => 'Set Route',
-            'grade' => $grade,
-            'topics' => $topics,
-            'gradeRoute' => $gradeRoute,
-            'flashData' => $this->session->getFlashdata(),
-            'user' => $this->user
-        ]);
-    }
-
-    public function updateRoute()
-    {
-        if (!$this->user) {
-            return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
-        }
-
-        if ($this->user['user_type'] != 'admin') {
-            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Forbidden']);
-        }
-
-        $gradeId = $this->request->getPost('grade_id');
-        $topics = $this->request->getPost('topics');
-
-        if (!$gradeId || !$topics) {
-            return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'Bad Request']);
-        }
-
-        $topics = explode(',', $topics);
-
-        // Remove duplicates
-        $topics = array_unique($topics);
-
-        $gradeRouteModel = new GradeRouteModel();
-
-        $gradeRouteModel->where('grade_id', $gradeId)->delete();
-
-        foreach ($topics as $topic) {
-            $gradeRouteModel->insert(['grade_id' => $gradeId, 'topic_id' => $topic]);
-        }
-
-        $this->session->setFlashdata('status', 'route_updated');
-
-        return $this->response->setJSON(['status' => 'success', 'message' => 'Route updated successfully']);
     }
 }

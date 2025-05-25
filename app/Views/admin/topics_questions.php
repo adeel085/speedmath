@@ -24,7 +24,6 @@
                     <table class="table mb-0">
                         <thead>
                             <tr>
-                                <th style="border-top: none;">Level</th>
                                 <th style="border-top: none;">Question Type</th>
                                 <th style="border-top: none;">Question</th>
                                 <th style="border-top: none;"></th>
@@ -33,7 +32,6 @@
                         <tbody>
                             <?php foreach ($questions as $question) : ?>
                                 <tr data-id="<?= $question['id'] ?>">
-                                    <td><?= $question['level'] ?></td>
                                     <td><?= $question['question_type'] ?></td>
                                     <td><?= strip_tags($question['question_html']) ?></td>
                                     <td>

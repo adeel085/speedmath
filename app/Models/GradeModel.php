@@ -17,5 +17,5 @@ class GradeModel extends Model
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $dateFormat = 'datetime';
-    protected $allowedFields = ['name', 'grade_level', 'timer_minutes'];
+    protected $allowedFields = ['name', 'grade_level', 'topic_id', 'number_of_questions'];
 }

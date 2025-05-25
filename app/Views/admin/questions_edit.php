@@ -25,16 +25,6 @@
         <div class="card">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-sm-6">
-                        <div class="form-group">
-                            <label for="difficulty">Difficulty Level</label>
-                            <select class="form-control" id="difficulty">
-                                <option value="1" <?= $question['level'] == 1 ? 'selected' : '' ?>>Level 1 - Easy</option>
-                                <option value="2" <?= $question['level'] == 2 ? 'selected' : '' ?>>Level 2 - Medium</option>
-                                <option value="3" <?= $question['level'] == 3 ? 'selected' : '' ?>>Level 3 - Hard</option>
-                            </select>
-                        </div>
-                    </div>
 
                     <div class="col-sm-6">
                         <div class="form-group">
@@ -233,7 +223,6 @@
         $("#saveBtn").click(async function(e) {
 
             let questionId = $("#questionId").val();
-            let difficulty = $("#difficulty").val();
             let questionType = $("#questionType").val();
             let question = CKEDITOR.instances["questionEditor"].getData();
             let solution = CKEDITOR.instances["solutionEditor"].getData();
@@ -271,7 +260,6 @@
             try {
                 let formData = new FormData();
                 formData.append('questionId', questionId);
-                formData.append('difficulty', difficulty);
                 formData.append('questionType', questionType);
                 formData.append('question', question);
                 formData.append('solution', solution);

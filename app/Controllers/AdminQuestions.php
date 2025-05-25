@@ -73,7 +73,6 @@ class AdminQuestions extends BaseController
         }
 
         $topicId = $this->request->getPost('topicId');
-        $difficulty = $this->request->getPost('difficulty');
         $questionType = $this->request->getPost('questionType');
         $question = $this->request->getPost('question');
         $solution = $this->request->getPost('solution');
@@ -85,7 +84,6 @@ class AdminQuestions extends BaseController
         $questionAnswersModel = new QuestionAnswersModel();
 
         $questionId = $questionModel->insert([
-            'level' => $difficulty,
             'question_type' => $questionType,
             'question_html' => $question,
             'solution_html' => $solution,
@@ -149,7 +147,6 @@ class AdminQuestions extends BaseController
         }
 
         $questionId = $this->request->getPost('questionId');
-        $difficulty = $this->request->getPost('difficulty');
         $questionType = $this->request->getPost('questionType');
         $question = $this->request->getPost('question');
         $solution = $this->request->getPost('solution');
@@ -160,7 +157,6 @@ class AdminQuestions extends BaseController
         $questionAnswersModel = new QuestionAnswersModel();
 
         $updated = $questionModel->update($questionId, [
-            'level' => $difficulty,
             'question_type' => $questionType,
             'question_html' => $question,
             'solution_html' => $solution,
@@ -264,23 +260,21 @@ class AdminQuestions extends BaseController
                     $topicId = $topic['id'];
                 }
 
-                $level = $row[1];
-                $questionType = $row[2];
-                $question = $row[3];
-                $solution = $row[4];
+                $questionType = $row[1];
+                $question = $row[2];
+                $solution = $row[3];
 
                 // Answers
-                $answer1 = $row[5];
-                $is_answer1_correct = (int) $row[6];
-                $answer2 = $row[7];
-                $is_answer2_correct = (int) $row[8];
-                $answer3 = $row[9];
-                $is_answer3_correct = (int) $row[10];
-                $answer4 = $row[11];
-                $is_answer4_correct = (int) $row[12];
+                $answer1 = $row[4];
+                $is_answer1_correct = (int) $row[5];
+                $answer2 = $row[6];
+                $is_answer2_correct = (int) $row[7];
+                $answer3 = $row[8];
+                $is_answer3_correct = (int) $row[9];
+                $answer4 = $row[10];
+                $is_answer4_correct = (int) $row[11];
 
                 $questionId = $questionModel->insert([
-                    'level' => $level,
                     'question_type' => $questionType,
                     'question_html' => $question,
                     'solution_html' => $solution,
