@@ -91,7 +91,7 @@
         <div class="navbar-menu">
             <div class="navbar-brand-box">
                 <a href="<?= base_url('/admin') ?>" class="logo">
-                    <img src="<?= base_url('public/assets/images/Transparent_Logo.png') ?>" height="59">
+                    <img src="<?= base_url('public/assets/images/logo.png?v=1') ?>" height="59">
                 </a>
             </div>
 

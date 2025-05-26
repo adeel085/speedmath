@@ -23,7 +23,7 @@
 <div class="login-page">
     <div class="login-card">
         <div class="d-flex justify-content-center">
-            <img style="width: 300px; max-width: 100%;" src="<?= base_url('public/assets/images/Transparent_Logo.png') ?>" />
+            <img style="width: 300px; max-width: 100%;" src="<?= base_url('public/assets/images/logo.png?v=1') ?>" />
         </div>
         <div class="login-form mt-4">
             <div class="mb-3">
@@ -43,7 +43,7 @@
 
         <div class="mt-4 text-center text-muted">
             <small>
-                &copy; <?= date('Y') ?> My Quick Math. All rights reserved.
+                &copy; <?= date('Y') ?> Speed Math. All rights reserved.
             </small>
         </div>
     </div>

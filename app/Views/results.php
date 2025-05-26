@@ -34,7 +34,7 @@
 <?= $this->section('content') ?>
 
 <div class="container pt-3">
-    <img src="<?= base_url('public/assets/images/Transparent_Logo.png') ?>" alt="Logo" class="logo">
+    <img src="<?= base_url('public/assets/images/logo.png?v=1') ?>" alt="Logo" class="logo">
 </div>
 
 <div class="d-flex flex-column justify-content-center align-items-center pt-5">

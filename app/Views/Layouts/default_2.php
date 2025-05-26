@@ -58,7 +58,7 @@
             <nav class="navbar navbar-expand-md bg-light navbar-light">
                 <!-- Brand -->
                 <a class="navbar-brand" href="<?= base_url('/') ?>">
-                    <img src="<?= base_url('public/assets/images/Transparent_Logo.png') ?>" alt="Logo" style="width: 100px; max-width: 100%;">
+                    <img src="<?= base_url('public/assets/images/logo.png?v=1') ?>" alt="Logo" style="width: 100px; max-width: 100%;">
                 </a>
 
                 <!-- Toggler/collapsibe Button -->
