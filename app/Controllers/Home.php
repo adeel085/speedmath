@@ -11,8 +11,6 @@ use App\Models\StudentQuestionsResultsModel;
 use App\Models\GradeModel;
 use App\Models\StudentSessionResultModel;
 
-use DateTime;
-
 class Home extends BaseController
 {
     public function index()
@@ -98,6 +96,7 @@ class Home extends BaseController
             $this->session->set('session_start_time', time());
             $this->session->set('grade_id', $studentGrade['grade_id']);
             $this->session->set('topic_id', $currentTopic['id']);
+            $this->session->set('total_questions', count($questions));
         }
 
         return view('home', [
@@ -165,9 +164,97 @@ class Home extends BaseController
             return redirect()->to(base_url('/'));
         }
 
+        $studentGradeModel = new StudentGradeModel();
+        $gradeModel = new GradeModel();
+        $topicModel = new TopicModel();
+        $studentSessionResultModel = new StudentSessionResultModel();
+
+        $filteredTopicId = $this->request->getGet('topic');
+
+        $studentGrade = $studentGradeModel->where('student_id', $this->user['id'])->first();
+        $currentTopicId = NULL;
+
+        if ($studentGrade) {
+            $grade = $gradeModel->where('id', $studentGrade['grade_id'])->first();
+            if ($grade) {
+                $currentTopicId = $grade['topic_id'];
+            }
+        }
+
+        if (empty($filteredTopicId) && $currentTopicId) {
+            $filteredTopicId = $currentTopicId;
+        }
+
+        if ($filteredTopicId == NULL) {
+            // Get the most recent topic_id from the student_session_results table
+            $mostRecentTopicId = $studentSessionResultModel->select('topic_id')->orderBy('created_at', 'DESC')->first();
+
+            if ($mostRecentTopicId) {
+                $filteredTopicId = $mostRecentTopicId['topic_id'];
+            }
+        }
+
+        $studentSessionResults = NULL;
+        $filteredTopic = NULL;
+
+        if ($filteredTopicId) {
+            $filteredTopic = $topicModel->where('id', $filteredTopicId)->first();
+            $studentSessionResults = $studentSessionResultModel->where('student_id', $this->user['id'])->where('topic_id', $filteredTopicId)->orderBy('created_at', 'DESC')->findAll();
+        }
+
+        // Now get all of the topics the student has ever attempted
+        $distinctTopicIds = $studentSessionResultModel->select('topic_id')->where('student_id', $this->user['id'])->distinct()->findAll();
+        $distinctTopicIds = array_column($distinctTopicIds, 'topic_id');
+
+        if (count($distinctTopicIds) == 0 && $currentTopicId) {
+            $distinctTopicIds = [$currentTopicId];
+        }
+
+        if (count($distinctTopicIds) > 0) {
+            $allStudentTopics = $topicModel->whereIn('id', $distinctTopicIds)->findAll();
+        }
+        else {
+            $allStudentTopics = [];
+        }
+
+        if (!in_array($filteredTopicId, $distinctTopicIds)) {
+            $filteredTopic = NULL;
+        }
+
+        if (count($studentSessionResults) > 0) {
+            $averageTimeTaken = 0;
+            $bestTimeTaken = PHP_INT_MAX;
+            $worstTimeTaken = 0;
+
+            foreach ($studentSessionResults as $studentSessionResult) {
+                $averageTimeTaken += $studentSessionResult['time_taken'];
+
+                if ($studentSessionResult['time_taken'] > $worstTimeTaken) {
+                    $worstTimeTaken = $studentSessionResult['time_taken'];
+                }
+
+                if ($studentSessionResult['time_taken'] < $bestTimeTaken) {
+                    $bestTimeTaken = $studentSessionResult['time_taken'];
+                }
+            }
+
+            $averageTimeTaken = $averageTimeTaken / count($studentSessionResults);
+        }
+        else {
+            $averageTimeTaken = 0;
+            $bestTimeTaken = 0;
+            $worstTimeTaken = 0;
+        }
+
         return view('history', [
             'pageTitle' => 'History',
-            'user' => $this->user
+            'user' => $this->user,
+            'filteredTopic' => $filteredTopic,
+            'studentSessionResults' => $studentSessionResults,
+            'allStudentTopics' => $allStudentTopics,
+            'averageTimeTaken' => $averageTimeTaken,
+            'bestTimeTaken' => $bestTimeTaken,
+            'worstTimeTaken' => $worstTimeTaken
         ]);
     }
 
@@ -188,6 +275,7 @@ class Home extends BaseController
         $incorrectCount = $this->session->get('incorrect_count');
         $gradeId = $this->session->get('grade_id');
         $topicId = $this->session->get('topic_id');
+        $totalQuestions = $this->session->get('total_questions');
 
         $elapsedTime = time() - $sessionStartTime;
 
@@ -197,7 +285,8 @@ class Home extends BaseController
             'incorrect_count' => $incorrectCount,
             'time_taken' => $elapsedTime,
             'grade_id' => $gradeId,
-            'topic_id' => $topicId
+            'topic_id' => $topicId,
+            'total_questions' => $totalQuestions
         ]);
 
         $minutes = floor($elapsedTime / 60);

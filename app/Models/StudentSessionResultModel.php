@@ -17,5 +17,5 @@ class StudentSessionResultModel extends Model
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $dateFormat = 'datetime';
-    protected $allowedFields = ['student_id', 'correct_count', 'incorrect_count', 'time_taken', 'grade_id', 'topic_id'];
+    protected $allowedFields = ['student_id', 'correct_count', 'incorrect_count', 'time_taken', 'grade_id', 'topic_id', 'total_questions'];
 }

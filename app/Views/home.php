@@ -111,6 +111,7 @@ else {
         let timeInterval = null;
         let currentQuestionIndex = -1;
         let questions = <?= json_encode($questions) ?>;
+        let consecutiveIncorrectAnswers = 0;
 
         await showNextQuestion();
 
@@ -158,6 +159,8 @@ else {
                 if (res.status == 'success') {
 
                     if (res.is_correct) {
+                        consecutiveIncorrectAnswers = 0;
+
                         new Notify({
                             title: 'Info',
                             text: 'Correct Answer',
@@ -169,28 +172,44 @@ else {
                         await showNextQuestion();
                     }
                     else {
-                        new Notify({
-                            title: 'Info',
-                            text: 'Incorrect Answer',
-                            status: 'error',
-                            autoclose: true,
-                            autotimeout: 3000
-                        });
+                        consecutiveIncorrectAnswers++;
 
-                        if (res.solution == "") {
-                            await showNextQuestion();
+                        if (consecutiveIncorrectAnswers >= 3) {
+
+                            consecutiveIncorrectAnswers = 0;
+
+                            new Notify({
+                                title: 'Info',
+                                text: 'Incorrect Answer',
+                                status: 'error',
+                                autoclose: true,
+                                autotimeout: 3000
+                            });
+
+                            if (res.solution == "") {
+                                await showNextQuestion();
+                            }
+                            else {
+                                $('.question-solution').show();
+                                $('.question-solution .solution-content').html(res.solution);
+                                showingSolution = true;
+
+                                // Force MathJax to re-render the newly loaded content
+                                MathJax.Hub.Queue([
+                                    "Typeset",
+                                    MathJax.Hub,
+                                    $('.question-solution .solution-content').get(0),
+                                ]);
+                            }
                         }
                         else {
-                            $('.question-solution').show();
-                            $('.question-solution .solution-content').html(res.solution);
-                            showingSolution = true;
-
-                            // Force MathJax to re-render the newly loaded content
-                            MathJax.Hub.Queue([
-                                "Typeset",
-                                MathJax.Hub,
-                                $('.question-solution .solution-content').get(0),
-                            ]);
+                            new Notify({
+                                title: 'Info',
+                                text: 'Incorrect Answer. You have ' + (3 - consecutiveIncorrectAnswers) + ' attempts left.',
+                                status: 'error',
+                                autoclose: true,
+                                autotimeout: 3000
+                            });
                         }
                     }
                 }
@@ -316,10 +335,9 @@ else {
             $('#questionsWrapper').html(`
                 <div class="result-wrapper">
                     <h5 class="card-title">Result</h5>
-                    <p><strong>Correct Answers:</strong> ${result.correct_count}</p>
-                    <p><strong>Incorrect Answers:</strong> ${result.incorrect_count}</p>
                     <p><strong>Elapsed Time:</strong> ${result.elapsed_time}</p>
                     <a href="${window.baseUrl}home" class="btn btn-primary">Restart Session</a>
+                    <a href="${window.baseUrl}logout" class="btn btn-primary">Logout</a>
                 </div>
             `);
         }
