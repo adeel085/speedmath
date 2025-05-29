@@ -187,14 +187,14 @@ class Home extends BaseController
 
         if ($filteredTopicId == NULL) {
             // Get the most recent topic_id from the student_session_results table
-            $mostRecentTopicId = $studentSessionResultModel->select('topic_id')->orderBy('created_at', 'DESC')->first();
+            $mostRecentTopicId = $studentSessionResultModel->select('topic_id')->where('student_id', $this->user['id'])->orderBy('created_at', 'DESC')->first();
 
             if ($mostRecentTopicId) {
                 $filteredTopicId = $mostRecentTopicId['topic_id'];
             }
         }
 
-        $studentSessionResults = NULL;
+        $studentSessionResults = [];
         $filteredTopic = NULL;
 
         if ($filteredTopicId) {

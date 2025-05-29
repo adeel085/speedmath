@@ -6,6 +6,8 @@ use App\Models\UserModel;
 use App\Models\GradeModel;
 use App\Models\StudentGradeModel;
 use App\Models\ClassModel;
+use App\Models\TopicModel;
+use App\Models\StudentSessionResultModel;
 
 class AdminStudents extends BaseController
 {
@@ -209,10 +211,98 @@ class AdminStudents extends BaseController
             return redirect()->to(base_url('/'));
         }
 
+        $studentGradeModel = new StudentGradeModel();
+        $gradeModel = new GradeModel();
+        $topicModel = new TopicModel();
+        $studentSessionResultModel = new StudentSessionResultModel();
+
+        $filteredTopicId = $this->request->getGet('topic');
+
+        $studentGrade = $studentGradeModel->where('student_id', $id)->first();
+        $currentTopicId = NULL;
+
+        if ($studentGrade) {
+            $grade = $gradeModel->where('id', $studentGrade['grade_id'])->first();
+            if ($grade) {
+                $currentTopicId = $grade['topic_id'];
+            }
+        }
+
+        if (empty($filteredTopicId) && $currentTopicId) {
+            $filteredTopicId = $currentTopicId;
+        }
+
+        if ($filteredTopicId == NULL) {
+            // Get the most recent topic_id from the student_session_results table
+            $mostRecentTopicId = $studentSessionResultModel->select('topic_id')->where('student_id', $id)->orderBy('created_at', 'DESC')->first();
+
+            if ($mostRecentTopicId) {
+                $filteredTopicId = $mostRecentTopicId['topic_id'];
+            }
+        }
+
+        $studentSessionResults = [];
+        $filteredTopic = NULL;
+
+        if ($filteredTopicId) {
+            $filteredTopic = $topicModel->where('id', $filteredTopicId)->first();
+            $studentSessionResults = $studentSessionResultModel->where('student_id', $id)->where('topic_id', $filteredTopicId)->orderBy('created_at', 'DESC')->findAll();
+        }
+
+        // Now get all of the topics the student has ever attempted
+        $distinctTopicIds = $studentSessionResultModel->select('topic_id')->where('student_id', $id)->distinct()->findAll();
+        $distinctTopicIds = array_column($distinctTopicIds, 'topic_id');
+
+        if (count($distinctTopicIds) == 0 && $currentTopicId) {
+            $distinctTopicIds = [$currentTopicId];
+        }
+
+        if (count($distinctTopicIds) > 0) {
+            $allStudentTopics = $topicModel->whereIn('id', $distinctTopicIds)->findAll();
+        }
+        else {
+            $allStudentTopics = [];
+        }
+
+        if (!in_array($filteredTopicId, $distinctTopicIds)) {
+            $filteredTopic = NULL;
+        }
+
+        if (count($studentSessionResults) > 0) {
+            $averageTimeTaken = 0;
+            $bestTimeTaken = PHP_INT_MAX;
+            $worstTimeTaken = 0;
+
+            foreach ($studentSessionResults as $studentSessionResult) {
+                $averageTimeTaken += $studentSessionResult['time_taken'];
+
+                if ($studentSessionResult['time_taken'] > $worstTimeTaken) {
+                    $worstTimeTaken = $studentSessionResult['time_taken'];
+                }
+
+                if ($studentSessionResult['time_taken'] < $bestTimeTaken) {
+                    $bestTimeTaken = $studentSessionResult['time_taken'];
+                }
+            }
+
+            $averageTimeTaken = $averageTimeTaken / count($studentSessionResults);
+        }
+        else {
+            $averageTimeTaken = 0;
+            $bestTimeTaken = 0;
+            $worstTimeTaken = 0;
+        }
+
         return view('admin/students_report', [
             'pageTitle' => 'Reports',
             'flashData' => $this->session->getFlashdata(),
-            'user' => $this->user
+            'user' => $this->user,
+            'filteredTopic' => $filteredTopic,
+            'studentSessionResults' => $studentSessionResults,
+            'allStudentTopics' => $allStudentTopics,
+            'averageTimeTaken' => $averageTimeTaken,
+            'bestTimeTaken' => $bestTimeTaken,
+            'worstTimeTaken' => $worstTimeTaken
         ]);
     }
 

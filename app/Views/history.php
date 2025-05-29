@@ -123,77 +123,47 @@
             return;
         }
 
-        // Convert to format for Chart.js
+        // Prepare chart data
         const labels = sessionData.map(entry =>
-            new Date(entry.created_at).toLocaleDateString()
+            new Date(entry.created_at).toLocaleString()
+        );
+        const timeTakenData = sessionData.map(entry =>
+            parseInt(entry.time_taken, 10)
         );
 
-        const accuracyData = sessionData.map(entry => {
-            const correct = parseInt(entry.correct_count, 10);
-            const total = parseInt(entry.total_questions, 10);
-            return total > 0 ? (correct / total * 100).toFixed(2) : 0;
-        });
-
-        const speedData = sessionData.map(entry => {
-            const time = parseInt(entry.time_taken, 10);
-            return time > 0 ? (1 / time).toFixed(4) : 0;
-        });
-
-        // Create Chart
         new Chart(document.getElementById('sessionChart'), {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'Accuracy (%)',
-                        data: accuracyData,
-                        borderColor: 'blue',
-                        yAxisID: 'y',
-                        tension: 0.3,
-                        fill: false
-                    },
-                    {
-                        label: 'Speed (1 / time_taken)',
-                        data: speedData,
-                        borderColor: 'green',
-                        yAxisID: 'y1',
-                        tension: 0.3,
-                        fill: false
-                    }
+                {
+                    label: 'Time Taken (seconds)',
+                    data: timeTakenData,
+                    borderColor: 'green',
+                    backgroundColor: 'rgba(0,128,0,0.1)',
+                    tension: 0.3,
+                    fill: true
+                }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
                 aspectRatio: 2.5,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
-                stacked: false,
                 scales: {
-                    y: {
-                        type: 'linear',
-                        position: 'left',
-                        title: {
-                        display: true,
-                        text: 'Accuracy (%)'
-                        },
-                        min: 0,
-                        max: 100
-                    },
-                    y1: {
-                        type: 'linear',
-                        position: 'right',
-                        title: {
-                        display: true,
-                        text: 'Speed (1 / time)'
-                        },
-                        grid: {
-                        drawOnChartArea: false
-                        }
+                y: {
+                    beginAtZero: true,
+                    title: {
+                    display: true,
+                    text: 'Time Taken (s)'
                     }
+                },
+                x: {
+                    title: {
+                    display: true,
+                    text: 'Session Date & Time'
+                    }
+                }
                 }
             }
         });
