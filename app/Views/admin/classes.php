@@ -121,6 +121,9 @@
                                     <td><?= $class['name'] ?></td>
                                     <td>
                                         <div class="d-flex justify-content-end" style="gap: 10px;">
+                                            <a href="<?= base_url('/admin/classes/reports/' . $class['id']) ?>" class="table-action-btn" data-toggle="tooltip" title="Reports">
+                                                <i class="fa fa-chart-bar"></i>
+                                            </a>
                                             <a href="javascript:void(0)" class="table-action-btn send-email-btn" data-toggle="tooltip" title="Send Email to Parents">
                                                 <i class="fa fa-envelope"></i>
                                             </a>

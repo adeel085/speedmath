@@ -215,6 +215,13 @@ class AdminStudents extends BaseController
         $gradeModel = new GradeModel();
         $topicModel = new TopicModel();
         $studentSessionResultModel = new StudentSessionResultModel();
+        $studentModel = new UserModel();
+
+        $student = $studentModel->find($id);
+
+        if (!$student) {
+            return redirect()->to(base_url('/admin/students'));
+        }
 
         $filteredTopicId = $this->request->getGet('topic');
 
@@ -297,6 +304,7 @@ class AdminStudents extends BaseController
             'pageTitle' => 'Reports',
             'flashData' => $this->session->getFlashdata(),
             'user' => $this->user,
+            'student' => $student,
             'filteredTopic' => $filteredTopic,
             'studentSessionResults' => $studentSessionResults,
             'allStudentTopics' => $allStudentTopics,

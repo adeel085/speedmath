@@ -26,9 +26,13 @@
         <div class="card">
             <div class="card-body">
                 <div class="mb-4">
+                    <h6 class="mb-3">Report of Student: <?= $student['full_name'] ?></h6>
+                </div>
+                <div class="mb-4 d-flex align-items-center" style="gap: 10px;">
                     <?php
                     if (count($allStudentTopics) > 0) {
                         ?>
+                        <span>Topic</span>
                         <select class="form-control" id="topicSelect" style="width: 300px; max-width: 100%;">
                             <option value="" disabled selected>Select a topic</option>
                             <?php
@@ -71,7 +75,7 @@
                 </div>
 
                 <div id="chart-container" class="mb-4">
-                    <canvas id="sessionChart"></canvas>
+                    <canvas id="performanceChart"></canvas>
                 </div>
 
                 <div class="table-responsive">
@@ -128,47 +132,84 @@
             return;
         }
 
-        // Prepare chart data
+        // Prepare data arrays
         const labels = sessionData.map(entry =>
             new Date(entry.created_at).toLocaleString()
         );
-        const timeTakenData = sessionData.map(entry =>
-            parseInt(entry.time_taken, 10)
-        );
 
-        new Chart(document.getElementById('sessionChart'), {
+        const performanceScores = sessionData.map(entry => {
+            const correct = parseInt(entry.correct_count, 10);
+            const total = parseInt(entry.total_questions, 10);
+            const time = parseInt(entry.time_taken, 10);
+
+            const accuracy = total > 0 ? correct / total : 0;
+            const speed = time > 0 ? 1 / time : 0;
+
+            // 🔁 If accuracy < 5%, score is 0
+            if (accuracy < 0.05) {
+                return 0;
+            }
+
+            // 🎯 Weighted accuracy formula
+            const score = (accuracy ** 2) * speed * 1000;
+
+            return +score.toFixed(2);
+        });
+
+        // Create chart
+        new Chart(document.getElementById('performanceChart'), {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [
-                {
-                    label: 'Time Taken (seconds)',
-                    data: timeTakenData,
-                    borderColor: 'green',
-                    backgroundColor: 'rgba(0,128,0,0.1)',
+                datasets: [{
+                    label: 'Performance Score (Accuracy Weighted)',
+                    data: performanceScores,
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.2)',
                     tension: 0.3,
                     fill: true
-                }
-                ]
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
                 aspectRatio: 2.5,
                 scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                    display: true,
-                    text: 'Time Taken (s)'
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                        display: true,
+                        text: 'Performance Score'
+                        }
+                    },
+                    x: {
+                        title: {
+                        display: true,
+                        text: 'Session Date & Time'
+                        }
                     }
                 },
-                x: {
-                    title: {
-                    display: true,
-                    text: 'Session Date & Time'
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const index = context.dataIndex;
+                                const entry = sessionData[index];
+
+                                const correct = entry.correct_count;
+                                const total = entry.total_questions;
+                                const timeTaken = parseInt(entry.time_taken, 10);
+                                const minutes = Math.floor(timeTaken / 60);
+                                const seconds = timeTaken % 60;
+
+                                return [
+                                    `Performance Score: ${context.formattedValue}`,
+                                    `Accuracy: ${correct}/${total}`,
+                                    `Time Taken: ${minutes}m ${seconds}s`
+                                ];
+                            }
+                        }
                     }
-                }
                 }
             }
         });

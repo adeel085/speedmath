@@ -25,6 +25,7 @@ $routes->get('/admin/grades/setRoute/(:any)', 'AdminGrades::setRoutePage/$1');
 
 $routes->get('/admin/classes', 'AdminClasses::index');
 $routes->get('/admin/classes/(:any)/students', 'AdminClasses::studentsPage/$1');
+$routes->get('/admin/classes/reports/(:any)', 'AdminClasses::reportsPage/$1');
 
 $routes->get('/admin/topics', 'AdminTopics::index');
 $routes->get('/admin/topics/new', 'AdminTopics::newPage');

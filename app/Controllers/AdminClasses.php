@@ -7,6 +7,8 @@ use App\Models\ClassModel;
 use App\Models\UserModel;
 use App\Models\GradeModel;
 use App\Models\StudentGradeModel;
+use App\Models\StudentSessionResultModel;
+use App\Models\TopicModel;
 
 class AdminClasses extends BaseController
 {
@@ -238,5 +240,146 @@ class AdminClasses extends BaseController
         $email->setMessage($message);
         
         return $email->send();
+    }
+
+    public function reportsPage($id)
+    {
+        if (!$this->user) {
+            return redirect()->to(base_url('/admin'));
+        }
+
+        if ($this->user['user_type'] != 'admin' && $this->user['user_type'] != 'teacher') {
+            return redirect()->to(base_url('/'));
+        }
+
+        $classModel = new ClassModel();
+        $userModel = new UserModel();
+        $topicModel = new TopicModel();
+        $studentSessionResultModel = new StudentSessionResultModel();
+
+        $topics = $topicModel->findAll();
+
+        $class = $classModel->find($id);
+
+        if (!$class) {
+            return redirect()->to(base_url('/admin/classes'));
+        }
+
+        $classModel = new ClassModel();
+        $userModel = new UserModel();
+        $topicModel = new TopicModel();
+        $studentSessionResultModel = new StudentSessionResultModel();
+
+        $class = $classModel->find($id);
+
+        if (!$class) {
+            return redirect()->to(base_url('/admin/classes'));
+        }
+
+        $filteredTopicId = $this->request->getGet('topic');
+        $filteredTopic = NULL;
+
+        $totalTimeTaken = 0;
+        $timeCount = 0;
+        $bestTimeTaken = PHP_INT_MAX;
+        $worstTimeTaken = 0;
+        $averageTimeTaken = 0;
+        $performanceData = [];
+
+        if (!empty($filteredTopicId)) {
+            $filteredTopic = $topicModel->where('id', $filteredTopicId)->first();
+
+            if (!$filteredTopic) {
+                return redirect()->back()->with('error', 'Topic not found.');
+            }
+
+            // Get all students belonging to this class
+            $students = $userModel->filterByStudentOf($this->user['id'])->findAll();
+            $filteredStudents = [];
+
+            foreach ($students as $student) {
+                $studentClassId = $userModel->getUserMeta('studentClassId', $student['id'], true);
+                if ($studentClassId == $id) {
+                    $filteredStudents[] = $student;
+                }
+            }
+
+            $studentIds = array_column($filteredStudents, 'id');
+            $resultsByDate = [];
+
+            // Step 2: Get session results per student for the given topic
+            foreach ($studentIds as $studentId) {
+                $results = $studentSessionResultModel
+                    ->where('student_id', $studentId)
+                    ->where('topic_id', $filteredTopicId)
+                    ->orderBy('created_at', 'ASC')
+                    ->findAll();
+
+                foreach ($results as $result) {
+                    $date = date('Y-m-d', strtotime($result['created_at']));
+                    $correct = (int)$result['correct_count'];
+                    $total = (int)$result['total_questions'];
+                    $time = (int)$result['time_taken'];
+
+                    // Track time taken for stats
+                    $totalTimeTaken += $time;
+                    $bestTimeTaken = min($bestTimeTaken, $time);
+                    $worstTimeTaken = max($worstTimeTaken, $time);
+                    $timeCount++;
+
+                    $accuracy = $total > 0 ? $correct / $total : 0;
+                    $speed = $time > 0 ? 1 / $time : 0;
+
+                    $score = ($accuracy < 0.05) ? 0 : pow($accuracy, 2) * $speed * 1000;
+
+                    if (!isset($resultsByDate[$date])) {
+                        $resultsByDate[$date] = [
+                            'total_score' => 0,
+                            'count' => 0
+                        ];
+                    }
+
+                    $resultsByDate[$date]['total_score'] += $score;
+                    $resultsByDate[$date]['count']++;
+                }
+            }
+
+            if ($timeCount > 0) {
+                $averageTimeTaken = round($totalTimeTaken / $timeCount, 2);
+            } else {
+                $averageTimeTaken = 0;
+                $bestTimeTaken = 0;
+                $worstTimeTaken = 0;
+            }
+
+            // Step 3: Prepare final average performance per date
+            $performanceData = [];
+            foreach ($resultsByDate as $date => $data) {
+                $averageScore = $data['count'] > 0 ? $data['total_score'] / $data['count'] : 0;
+                $performanceData[] = [
+                    'date' => $date,
+                    'average_score' => round($averageScore, 2)
+                ];
+            }
+
+            // Sort by date ascending
+            usort($performanceData, fn($a, $b) => strcmp($a['date'], $b['date']));
+        }
+        else {
+            $bestTimeTaken = 0;
+        }
+
+        return view('admin/classes_report', [
+            'pageTitle' => 'Class Topic Report',
+            'flashData' => $this->session->getFlashdata(),
+            'user' => $this->user,
+            'class' => $class,
+            'filteredTopic' => $filteredTopic,
+            'performanceData' => $performanceData,
+            'averageTimeTaken' => $averageTimeTaken,
+            'bestTimeTaken' => $bestTimeTaken,
+            'worstTimeTaken' => $worstTimeTaken,
+            'topics' => $topics
+        ]);
     }
 }
