@@ -6,7 +6,6 @@ use App\Models\UserModel;
 use App\Models\TopicModel;
 use App\Models\QuestionModel;
 use App\Models\TopicQuestionsModel;
-use App\Models\GradeRouteModel;
 
 class AdminTopics extends BaseController
 {
@@ -244,9 +243,7 @@ class AdminTopics extends BaseController
         }
 
         $topicModel = new TopicModel();
-        $gradeRouteModel = new GradeRouteModel();
 
-        $gradeRouteModel->where('topic_id', $id)->delete();
         $topicModel->delete($id);
 
         $this->session->setFlashdata('status', 'topic_deleted');
