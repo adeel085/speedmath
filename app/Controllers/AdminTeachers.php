@@ -82,6 +82,8 @@ class AdminTeachers extends BaseController
             'user_type' => 'teacher'
         ], true);
 
+        $userModel->insertUserMeta('onboarding_completed', 0, $userId);
+
         if (!$userId) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Something went wrong']);
         }

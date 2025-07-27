@@ -100,5 +100,21 @@ abstract class BaseController extends Controller
                 $this->user = NULL;
             }
         }
+        else if ($this->user && $this->user['user_type'] == 'teacher') {
+            $onBoardingCompleted = $userModel->getUserMeta('onboarding_completed', $this->user['id'], true);
+
+            if ($onBoardingCompleted === NULL) {
+                $userModel->insertUserMeta('onboarding_completed', 0, $this->user['id']);
+            }
+
+            if ($onBoardingCompleted == 0) {
+                $uri = $this->request->getUri();
+                $uriPath = $uri->getPath();
+
+                if (!str_ends_with($uriPath, '/admin/onboarding') && !str_ends_with($uriPath, '/admin/students/saveNew')) {
+                    return $this->response->redirect(base_url('/admin/onboarding'));
+                }
+            }
+        }
     }
 }

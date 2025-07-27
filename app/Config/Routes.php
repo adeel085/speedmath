@@ -36,6 +36,8 @@ $routes->get('/admin/questions', 'AdminQuestions::index');
 $routes->get('/admin/questions/new', 'AdminQuestions::newPage');
 $routes->get('/admin/questions/edit/(:any)', 'AdminQuestions::editPage/$1');
 
+$routes->get('/admin/onboarding', 'AdminOnboarding::index');
+
 $routes->get('/evaluation', 'Home::evaluationPage');
 
 $routes->get('/report-questions', 'Reports::reportMissingQuestions');
