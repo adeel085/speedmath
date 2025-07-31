@@ -32,27 +32,30 @@
             <img style="width: 300px; max-width: 100%;" src="<?= base_url('public/assets/images/logo.png?v=1') ?>" />
         </div>
         <div class="login-form mt-4">
+            <h4 class="text-center mb-4">Create Your Account</h4>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Full Name" id="name" />
+            </div>
             <div class="mb-3">
                 <input type="text" class="form-control" placeholder="Username" id="username" />
             </div>
             <div class="mb-3">
-                <input type="password" class="form-control" placeholder="Password" id="password" />
+                <input type="email" class="form-control" placeholder="Email" id="email" />
             </div>
             <div class="mb-3">
-                <input type="checkbox" id="rememberMe" />
-                <label class="mb-0" for="rememberMe">Remember me</label>
+                <input type="password" class="form-control" placeholder="Password" id="password" />
             </div>
             <div>
-                <button class="btn btn-primary w-100" id="loginBtn">Login as Teacher</button>
+                <button class="btn btn-primary w-100" id="registerBtn">Create My Account</button>
             </div>
             <div class="text-right mt-3">
-                <a href="<?= base_url('admin/teacher-registration') ?>">Don't have an account? Create one</a>
+                <a href="<?= base_url('admin') ?>">Already have an account? Login</a>
             </div>
         </div>
 
         <div class="mt-4 text-center text-muted">
             <small>
-                &copy; <?= date('Y') ?> Speed Math. All rights reserved.
+                &copy; <?= date('Y') ?> My Quick Math. All rights reserved.
             </small>
         </div>
     </div>
@@ -61,64 +64,65 @@
 
 <?= $this->section('foot') ?>
 <script>
-    $('#loginBtn').click(async function() {
-        const username = $('#username').val();
-        const password = $('#password').val();
-        const rememberMe = $('#rememberMe').is(':checked');
+    $('#registerBtn').click(async function(e) {
+        
+        let name = $('#name').val().trim();
+        let username = $('#username').val().trim();
+        let email = $('#email').val().trim();
+        let password = $('#password').val().trim();
 
-        if (username == '' || password == '') {
+        if (!name || !username || !email || !password) {
             new Notify({
-                title: 'Error',
-                text: 'Please enter your username and password',
                 status: 'error',
-                autoclose: true,
-                autotimeout: 3000
+                title: 'Error',
+                text: 'Please fill all the required (*) fields',
+                timeout: 3000,
+                autoclose: true
             });
             return;
         }
 
         try {
-
             let formData = new FormData();
+            formData.append('name', name);
             formData.append('username', username);
+            formData.append('email', email);
             formData.append('password', password);
-            formData.append('rememberMe', rememberMe);
 
-            // Show loader in login button
             $(this).attr('data-content', $(this).html()).html('<i class="fa fa-spinner fa-spin"></i>').css('pointer-events', 'none');
 
-            const res = await ajaxCall({
-                url: baseUrl + '/admin/login',
+            let response = await ajaxCall({
+                url: baseUrl + '/admin/teachers/register',
                 data: formData,
                 csrfHeader: '<?= csrf_header() ?>',
                 csrfHash: '<?= csrf_hash() ?>'
             });
 
-            if (res.status == 'success') {
-                window.location.href = baseUrl + 'admin/dashboard';
+            if (response.status == 'success') {
+                window.location.href = window.baseUrl + 'admin'; // Redirect to the login page
                 return;
             }
             else {
                 new Notify({
                     title: 'Error',
-                    text: res.message,
+                    text: response.message,
                     status: 'error',
                     autoclose: true,
                     autotimeout: 3000
                 });
             }
-        } catch (err) {
+        } catch (error) {
             new Notify({
                 title: 'Error',
-                text: err.responseJSON.message || 'Something went wrong',
+                text: error.responseJSON.message || 'Something went wrong',
                 status: 'error',
                 autoclose: true,
                 autotimeout: 3000
             });
         }
 
-        // Reset login button
-        $('#loginBtn').html($(this).attr('data-content')).css('pointer-events', 'auto');
+        // Reset save button
+        $('#registerBtn').html($(this).attr('data-content')).css('pointer-events', 'auto');
     });
 </script>
 <?= $this->endSection() ?>

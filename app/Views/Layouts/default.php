@@ -59,6 +59,18 @@
     </script>
     <?php endif; ?>
 
+    <?php if (isset($flashData['status']) && $flashData['status'] == 'teacher_registered'): ?>
+    <script>
+        new Notify({
+            title: 'Success',
+            text: 'Teacher account created successfully',
+            status: 'success',
+            autoclose: true,
+            autotimeout: 3000
+        });
+    </script>
+    <?php endif; ?>
+
     <?= $this->renderSection('foot') ?>
 </body>
 

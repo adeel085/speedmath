@@ -9,11 +9,16 @@ class AdminLogin extends BaseController
     public function index()
     {
         if ($this->user) {
-            return redirect()->to(base_url('/admin/dashboard'));
+            if ($this->user['user_type'] == 'admin' || $this->user['user_type'] == 'teacher') {
+                return redirect()->to(base_url('/admin/dashboard'));
+            }
+
+            return redirect()->to(base_url('/'));
         }
 
         return view('admin/login', [
-            'pageTitle' => 'Admin Login'
+            'pageTitle' => 'Admin Login',
+            'flashData' => $this->session->getFlashdata()
         ]);
     }
 
@@ -54,5 +59,20 @@ class AdminLogin extends BaseController
         $this->session->setFlashdata('status', 'user_logged_in');
 
         return $this->response->setJSON(['status' => 'success']);
+    }
+
+    public function teacherRegistrationPage()
+    {
+        if ($this->user) {
+            if ($this->user['user_type'] == 'admin' || $this->user['user_type'] == 'teacher') {
+                return redirect()->to(base_url('/admin/dashboard'));
+            }
+
+            return redirect()->to(base_url('/'));
+        }
+
+        return view('admin/teacher_registration', [
+            'pageTitle' => 'Teacher Registration'
+        ]);
     }
 }

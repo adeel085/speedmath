@@ -93,6 +93,44 @@ class AdminTeachers extends BaseController
         return $this->response->setJSON(['status' => 'success', 'message' => 'Teacher created successfully']);
     }
 
+    public function register()
+    {
+        $name = $this->request->getPost('name');
+        $username = $this->request->getPost('username');
+        $email = $this->request->getPost('email');
+        $password = $this->request->getPost('password');
+
+        if (!$name || !$username || !$email || !$password) {
+            return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'Bad Request']);
+        }
+
+        $userModel = new UserModel();
+
+        $user = $userModel->where('username', $username)->first();
+
+        if ($user) {
+            return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'Username already exists']);
+        }
+
+        $userId = $userModel->insert([
+            'full_name' => $name,
+            'username' => $username,
+            'email' => $email,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'user_type' => 'teacher'
+        ], true);
+
+        $userModel->insertUserMeta('onboarding_completed', 0, $userId);
+
+        if (!$userId) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Something went wrong']);
+        }
+
+        $this->session->setFlashdata('status', 'teacher_registered');
+
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Teacher account created successfully']);
+    }
+
     public function editPage($id)
     {
         if (!$this->user) {

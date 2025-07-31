@@ -16,7 +16,7 @@
                         <div class="col-12">
                             <p>Welcome to the Onboarding process. Please follow the steps below to get started.</p>
 
-                            <h5 class="mb-3">Create a sturent</h5>
+                            <h5 class="mb-3">Create a student</h5>
 
                             <div class="row">
                                 <div class="col-sm-6">

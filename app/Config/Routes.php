@@ -5,7 +5,9 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Login::index');
+$routes->get('/', 'Index::index');
+$routes->get('/login', 'Login::index');
+$routes->get('/admin/teacher-registration', 'AdminLogin::teacherRegistrationPage');
 $routes->get('/signup', 'Signup::index');
 $routes->get('/home', 'Home::index');
 $routes->get('/admin', 'AdminLogin::index');
@@ -78,6 +80,7 @@ $routes->post('/admin/topics/create-from-wizard', 'AdminTopics::createTopicFromW
 $routes->post('/admin/teachers/saveNew', 'AdminTeachers::saveNew');
 $routes->post('/admin/teachers/update', 'AdminTeachers::update');
 $routes->post('/admin/teachers/delete', 'AdminTeachers::delete');
+$routes->post('/admin/teachers/register', 'AdminTeachers::register');
 
 $routes->post('/login', 'Login::login');
 $routes->post('/signup-user', 'Signup::signupUser');
